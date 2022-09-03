@@ -57,13 +57,12 @@ async def fetch(url):
 async def send_welcome(message):
     await bot.reply_to(message, "Howdy, how are you doing?")
 
-# 监听所有消息
-@bot.message_handler()
+# 监听群组消息
+@bot.message_handler(func=lambda message: True)
 async def echo_all(message):
     #判断是否含有Pixiv链接
     if re.search(r'pixiv.net', message.text):
         #获取Pixiv链接
-        breakpoint()
         pixiv_url = re.search(r'(https?://[^\s]+)', message.text).group(1)
         #获取Pixiv
         text = await arequests.gettext(pixiv_url)
