@@ -4,10 +4,7 @@
 # It echoes any incoming text messages.
 import asyncio
 import logging
-import sqlite3
 import os
-from tkinter import N
-from tkinter.messagebox import NO
 import aiohttp
 
 import telebot
@@ -17,6 +14,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 Bot_Token = os.getenv('Bot_Token')
+UA = os.getenv('UA')
+
 bot = AsyncTeleBot(Bot_Token)
 
 # Configure logging
@@ -34,7 +33,6 @@ class arequests:
         '''
         异步请求HTTP
         '''
-        UA = 'MoeCbot/0.1 (+https://www.moec.top/bot/)'
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers={'User-Agent': UA}) as response:
                 return await response.text()
