@@ -55,12 +55,14 @@ async def telegraph_upload(message):
         file_info = await bot.get_file(file_id)
         file = await arequests.getfile('https://api.telegram.org/file/bot{0}/{1}'.format(Bot_Token, file_info.file_path))
         img = await telegraph.upload(file)
-        path = str(message.from_user.id) + "-" + str(day) + "-" +str(month)
+        path = str(message.from_user.id) + "-" + str(month) + "-" +str(day)
         content = await telegraph.getpage(path)
         text = ""
         if content["ok"] == True:
-            text = content["result"]["content"].append({'tag': 'figure', 'children': [{'tag': 'img', 'attrs': {'src': f'{photsupdated[0]}'}}, {'tag': 'figcaption', 'children': ['']}]})
-            res = await telegraph.editpage(content["result"]["path"], f"{message.from_user.id}-{day}-{month}", message.from_user.full_name, text)
+            html = nodes_to_html(content['result']['content'])
+            html = html + '<img src="{images}">'.format(images=img[0]['src'])
+            dom = json_dumps(html_to_nodes(html))
+            res = await telegraph.editpage(content["result"]["path"], f"{message.from_user.id}-{month}-{day}", message.from_user.full_name, content=dom)
         else:
             #上传图片到Telegraph
             res = await telegraph.create(message.from_user.id , message.from_user.full_name, message.reply_to_message.text,images=img[0]['src'])
@@ -157,7 +159,7 @@ class telegraph:
             'content': content_json
         }
         return await arequests.getjson(url, UA=UA, params=data)
-    async def getpage(path, return_content="False"):
+    async def getpage(path, return_content="True"):
         url = 'https://api.telegra.ph/getPage'
         data = {
             'path': path,
@@ -171,7 +173,7 @@ class telegraph:
             'path': path,
             'title': title,
             'author_name': author,
-            'content': json.loads(content),
+            'content': content,
             'return_content': return_content
         }
         return await arequests.getjson(url, UA=UA, params=data)
