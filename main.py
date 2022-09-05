@@ -8,9 +8,6 @@ import json
 import logging
 import os
 import aiohttp
-from aiograph import Telegraph
-telegraph = Telegraph()
-
 import sys
 import time
 
@@ -25,7 +22,7 @@ load_dotenv()
 Bot_Token = os.getenv('Bot_Token')
 UA = os.getenv('UA')
 telegraph_token = os.getenv('telegraph_token')
-telegraph.token = telegraph_token
+
 # Configure logging
 logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
                     level=logging.INFO)
@@ -50,7 +47,7 @@ async def send_welcome(message):
 #上传图片到Telegraph
 @bot.message_handler(commands=['updatetotelegraph'])
 async def telegraph_upload(message):
-    if message.reply_to_message.photo != None:
+    if message.reply_to_message != None:
         #下载图片
         day = str(time.strftime("%d", time.localtime()))
         month = str(time.strftime("%m", time.localtime()))
@@ -58,8 +55,6 @@ async def telegraph_upload(message):
         file_info = await bot.get_file(file_id)
         file = await arequests.getfile('https://api.telegram.org/file/bot{0}/{1}'.format(Bot_Token, file_info.file_path))
         img = await telegraph.upload(file)
-        photsupdated = []
-        photsupdated.append(img[0]['src'])
         path = str(message.from_user.id) + "-" + str(day) + "-" +str(month)
         content = await telegraph.getpage(path)
         text = ""
@@ -68,7 +63,7 @@ async def telegraph_upload(message):
             res = await telegraph.editpage(content["result"]["path"], f"{message.from_user.id}-{day}-{month}", message.from_user.full_name, text)
         else:
             #上传图片到Telegraph
-            res = await telegraph.create(message.from_user.id , message.from_user.full_name, message.reply_to_message.text,images=photsupdated)
+            res = await telegraph.create(message.from_user.id , message.from_user.full_name, message.reply_to_message.text,images=img[0]['src'])
         if res["ok"] == True:
             await bot.reply_to(message , f"""
             上传成功
@@ -148,17 +143,19 @@ class telegraph:
         url = 'https://telegra.ph/upload'
         data = {'file': file}
         return await arequests.postjson(url, data, UA=UA)
-    async def create(title, author , text, images: list):
+    async def create(title, author , text, images):
         url = 'https://api.telegra.ph/createPage'
-        text = [{"tag": "h4",
-            "children": ["Hello, World!"]}]
-        for i in images:
-            text.append({"tag":"figure","children":[{"tag":"img","attrs":{"src":f"{i}"}},{"tag":"figcaption","children":[""]}]})
+        
+        text = """
+        <img src="{images}">
+        <p>Hello World</p>
+        """.format(images=images)
+        content_json = json_dumps(html_to_nodes(text))
         data = {
             'access_token': telegraph_token,
             'title': title,
             'author_name': author,
-            'content': str(text)
+            'content': content_json
         }
         return await arequests.getjson(url, UA=UA, params=data)
     async def getpage(path, return_content="False"):
@@ -168,14 +165,14 @@ class telegraph:
             'return_content': return_content
         }
         return await arequests.getjson(url, UA=UA, params=data)
-    async def editpage(path, title, author, content, return_content:str="False"):
+    async def editpage(path, title, author, content, return_content="False"):
         url = 'https://api.telegra.ph/editPage'
         data = {
             'access_token': telegraph_token,
             'path': path,
             'title': title,
             'author_name': author,
-            'content': str(content),
+            'content': json.loads(content),
             'return_content': return_content
         }
         return await arequests.getjson(url, UA=UA, params=data)
