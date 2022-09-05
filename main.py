@@ -7,23 +7,24 @@ import json
 import logging
 import os
 import aiohttp
+import sys
+
 
 import telebot
 import re
 from telebot.async_telebot import AsyncTeleBot
 from dotenv import load_dotenv
 load_dotenv()
-from pyncm import apis as ncmapi
 
 Bot_Token = os.getenv('Bot_Token')
 UA = os.getenv('UA')
 
 bot = AsyncTeleBot(Bot_Token)
 
+
 # Configure logging
 logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
                     level=logging.INFO)
-logger = telebot.logger.setLevel(logging.DEBUG)
 
 # Initialize the bot
 bot = AsyncTeleBot(Bot_Token)
@@ -55,25 +56,6 @@ async def fetch(url):
 async def send_welcome(message):
     await bot.reply_to(message, "这是Moe Bot~~")
 
-#网易云音乐获取
-@bot.message_handler(commands=['ncm'])
-async def ncm(message):
-    #获取用户输入
-    breakpoint()
-    text = re.sub(' +', ' ', message.text)
-    text = text.split(' ', 1)
-    if len(text) == 2:
-        name = text[1]
-        res = await arequests.getjson("https://music.cyrilstudio.top/search?keywords={name}&limit=10".format(name=name), UA="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 SE 2.X MetaSr 1.0")
-        id = res['result']['songs'][0]['id']
-        res = ncmapi.track.GetTrackAudio(id)
-        if res["data"][0]["url"] != None:
-            await bot.send_audio(message.chat.id, audio=res["data"][0]["url"], reply_to_message_id=message.message_id)
-        else:
-            await bot.send_message(message.chat.id, "获取失败或是VIP限制歌曲", reply_to_message_id=message.message_id)
-    else:
-        await bot.reply_to(message, "请输入歌曲名")
-
 # 监听群组消息
 @bot.message_handler(func=lambda message: True)
 async def handel_all(message):
@@ -91,7 +73,6 @@ async def getinput(message, num):
         return text
     else:
         return False
-
 
 #Pixiv链接处理
 async def pixiv_url_handle(pixiv_url, message):
