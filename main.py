@@ -148,7 +148,6 @@ class telegraph:
         
         text = """
         <img src="{images}">
-        <p>Hello World</p>
         """.format(images=images)
         content_json = json_dumps(html_to_nodes(text))
         data = {

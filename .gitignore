@@ -3,3 +3,4 @@ user.db
 venv/
 *.session
 .env
+__pycache__/
