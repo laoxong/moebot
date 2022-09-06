@@ -34,7 +34,13 @@ logging.basicConfig(format='%(asctime)s: %(levelname)s %(name)s | %(message)s',
 #     logging.info("Database initialized.")
 # logging.info("Initializing bot...")
 bot = AsyncTeleBot(Bot_Token)
-
+#过滤器
+# class IsAdmin(telebot.custom_filters.SimpleCustomFilter):
+#     key='is_admin'
+#     @staticmethod
+#     def check(message: telebot.types.Message):
+#         return  await bot.get_chat_member(message.chat.id,message.from_user.id).status in ['administrator','creator']
+# bot.add_custom_filter(IsAdmin)
 
 # Handle '/help'
 @bot.message_handler(commands=['help'])
@@ -42,6 +48,31 @@ async def send_welcome(message):
     await bot.reply_to(message, """
     这是Moe Bot~~
     """)
+
+#一键踢出/静音
+@bot.message_handler(commands=['kick', 'mute'])
+async def kick_mute(message):
+    a = await bot.get_chat_member(message.chat.id, message.from_user.id)
+    if message.reply_to_message != None:
+        if a.status in ['administrator', 'creator']:
+            if '/kick' in message.text:
+                await bot.kick_chat_member(message.chat.id, message.reply_to_message.from_user.id)
+            elif '/mute' in message.text:
+                await bot.restrict_chat_member(message.chat.id, message.reply_to_message.from_user.id, can_send_messages=False)
+        else:
+            await bot.reply_to(message, '你不是管理员！')
+    else:
+        await bot.reply_to(message, '请回复消息！')
+@bot.message_handler(commands=['unmute'])
+async def unmute(message):
+    a = await bot.get_chat_member(message.chat.id, message.from_user.id)
+    if message.reply_to_message != None:
+        if a.status in ['administrator', 'creator']:
+            await bot.restrict_chat_member(message.chat.id, message.reply_to_message.from_user.id, can_send_messages=True)
+        else:
+            await bot.reply_to(message, '你不是管理员！')
+    else:
+        await bot.reply_to(message, '请回复消息！')
 
 
 #上传图片到Telegraph
@@ -177,6 +208,8 @@ class telegraph:
             'return_content': return_content
         }
         return await arequests.getjson(url, UA=UA, params=data)
+
+
 
 if __name__ == '__main__':
     asyncio.run(bot.polling())
