@@ -49,7 +49,7 @@ async def send_welcome(message):
     这是Moe Bot~~
     """)
 
-#一键踢出/静音
+#一键踢出/禁言
 @bot.message_handler(commands=['kick', 'mute'])
 async def kick_mute(message):
     a = await bot.get_chat_member(message.chat.id, message.from_user.id)
@@ -57,8 +57,10 @@ async def kick_mute(message):
         if a.status in ['administrator', 'creator']:
             if '/kick' in message.text:
                 await bot.kick_chat_member(message.chat.id, message.reply_to_message.from_user.id)
+                await bot.send_message(message.chat.id, f'已踢出{message.reply_to_message.from_user.first_name}')
             elif '/mute' in message.text:
                 await bot.restrict_chat_member(message.chat.id, message.reply_to_message.from_user.id, can_send_messages=False)
+                await bot.send_message(message.chat.id, f'已禁言{message.reply_to_message.from_user.first_name}')
         else:
             await bot.reply_to(message, '你不是管理员！')
     else:
@@ -69,6 +71,7 @@ async def unmute(message):
     if message.reply_to_message != None:
         if a.status in ['administrator', 'creator']:
             await bot.restrict_chat_member(message.chat.id, message.reply_to_message.from_user.id, can_send_messages=True)
+            await bot.reply_to(message, '已解除静音！')
         else:
             await bot.reply_to(message, '你不是管理员！')
     else:
